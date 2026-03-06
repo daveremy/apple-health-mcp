@@ -1,0 +1,22 @@
+{
+  "name": "apple-health-mcp",
+  "version": "0.1.0",
+  "description": "Apple Health MCP server — reads Health Auto Export CSVs",
+  "type": "module",
+  "bin": {
+    "apple-health-mcp": "./dist/mcp.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/mcp.js",
+    "dev": "tsx src/mcp.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
