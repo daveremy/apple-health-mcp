@@ -18,11 +18,20 @@ An MCP server for Apple Health data. Reads daily health metrics and workouts exp
 
 ## Setup
 
-### 1. Install Health Auto Export on iPhone
+### 1. Set up Health Auto Export on iPhone
+
+This MCP server reads CSV files produced by [Health Auto Export](https://apps.apple.com/app/health-auto-export-json-csv/id1115567461), a third-party iOS app that automatically exports Apple Health data to iCloud Drive. The app runs in the background and syncs new data throughout the day.
 
 1. Install [Health Auto Export](https://apps.apple.com/app/health-auto-export-json-csv/id1115567461) from the App Store
-2. Configure it to export daily metrics and workouts as CSV to iCloud Drive
-3. The default export path is: `~/Library/Mobile Documents/iCloud~com~ifunography~HealthExport/Documents/`
+2. Open the app and grant it access to Apple Health data when prompted
+3. Go to **Automations** and create two automations:
+   - **Daily Metrics**: Select the health metrics you want (steps, heart rate, sleep, etc.), set format to **CSV**, frequency to **Daily**, and destination to **iCloud Drive**
+   - **Workouts**: Select workout data, set format to **CSV**, frequency to **Daily**, and destination to **iCloud Drive**
+4. The app will export CSV files to iCloud Drive, which syncs automatically to your Mac at:
+   ```
+   ~/Library/Mobile Documents/iCloud~com~ifunography~HealthExport/Documents/
+   ```
+5. Verify the files are syncing by checking that the directory contains `Daily Export/` and `Workouts/` folders with dated CSV files
 
 ### 2. Install
 
