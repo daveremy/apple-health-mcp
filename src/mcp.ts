@@ -76,6 +76,16 @@ function parseCSV(content: string): Array<Record<string, string>> {
   return rows;
 }
 
+const SLEEP_FIELDS: Array<[string, keyof DailyMetrics]> = [
+  ["Sleep Analysis [Total] (hr)", "sleep_total"],
+  ["Sleep Analysis [Asleep] (hr)", "sleep_asleep"],
+  ["Sleep Analysis [In Bed] (hr)", "sleep_inbed"],
+  ["Sleep Analysis [Deep] (hr)", "sleep_deep"],
+  ["Sleep Analysis [REM] (hr)", "sleep_rem"],
+  ["Sleep Analysis [Core] (hr)", "sleep_core"],
+  ["Sleep Analysis [Awake] (hr)", "sleep_awake"],
+];
+
 function parseMetrics(date: string): DailyMetrics | null {
   const path = join(METRICS_DIR, `HealthMetrics-${date}.csv`);
   if (!existsSync(path)) return null;
@@ -117,16 +127,7 @@ function parseMetrics(date: string): DailyMetrics | null {
     const bf = val("Body Fat Percentage (%)"); if (bf) totals.body_fat.push(bf);
     const lm = val("Lean Body Mass (lbs)"); if (lm) totals.lean_mass.push(lm);
 
-    const sleepFields: Array<[string, keyof DailyMetrics]> = [
-      ["Sleep Analysis [Total] (hr)", "sleep_total"],
-      ["Sleep Analysis [Asleep] (hr)", "sleep_asleep"],
-      ["Sleep Analysis [In Bed] (hr)", "sleep_inbed"],
-      ["Sleep Analysis [Deep] (hr)", "sleep_deep"],
-      ["Sleep Analysis [REM] (hr)", "sleep_rem"],
-      ["Sleep Analysis [Core] (hr)", "sleep_core"],
-      ["Sleep Analysis [Awake] (hr)", "sleep_awake"],
-    ];
-    for (const [csvKey, totalKey] of sleepFields) {
+    for (const [csvKey, totalKey] of SLEEP_FIELDS) {
       const v = val(csvKey);
       if (v && v > (totals[totalKey] as number)) {
         (totals[totalKey] as number) = v;
@@ -139,30 +140,48 @@ function parseMetrics(date: string): DailyMetrics | null {
 
 interface Workout {
   type: string;
+  start: string;
+  end: string;
   duration: string;
-  active_cal: string;
-  total_cal: string;
-  avg_hr: string;
-  max_hr: string;
-  distance: string;
-  elevation: string;
-  steps: string;
+  active_cal: string | null;
+  total_cal: string | null;
+  avg_hr: string | null;
+  max_hr: string | null;
+  distance: string | null;
+  avg_speed: string | null;
+  steps: string | null;
+  step_cadence: string | null;
+  swim_strokes: string | null;
+  swim_cadence: string | null;
+  flights: string | null;
+  elevation_ascended: string | null;
+  elevation_descended: string | null;
 }
 
 function parseWorkouts(date: string): Workout[] {
   const path = join(WORKOUTS_DIR, `Workouts-${date}.csv`);
   if (!existsSync(path)) return [];
 
+  const optStr = (val: string | undefined): string | null => val && val !== "" ? val : null;
+
   return parseCSV(readFileSync(path, "utf-8")).map(row => ({
-    type: row["Type"] ?? "?",
-    duration: row["Duration"] ?? "?",
-    active_cal: row["Active Energy (kcal)"] ?? "",
-    total_cal: row["Total Energy (kcal)"] ?? "",
-    avg_hr: row["Avg Heart Rate (bpm)"] ?? "",
-    max_hr: row["Max Heart Rate (bpm)"] ?? "",
-    distance: row["Distance (mi)"] ?? "",
-    elevation: row["Elevation Ascended (ft)"] ?? "",
-    steps: row["Step Count (count)"] ?? "",
+    type: row["Type"] ?? "",
+    start: row["Start"] ?? "",
+    end: row["End"] ?? "",
+    duration: row["Duration"] ?? "",
+    active_cal: optStr(row["Active Energy (kcal)"]),
+    total_cal: optStr(row["Total Energy (kcal)"]),
+    avg_hr: optStr(row["Avg Heart Rate (bpm)"]),
+    max_hr: optStr(row["Max Heart Rate (bpm)"]),
+    distance: optStr(row["Distance (mi)"]),
+    avg_speed: optStr(row["Avg Speed (mi/hr)"]),
+    steps: optStr(row["Step Count (count)"]),
+    step_cadence: optStr(row["Step Cadence (spm)"]),
+    swim_strokes: optStr(row["Swimming Stroke Count (count)"]),
+    swim_cadence: optStr(row["Swim Stoke Cadence (spm)"] ?? row["Swim Stroke Cadence (spm)"]),
+    flights: optStr(row["Flights Climbed (count)"]),
+    elevation_ascended: optStr(row["Elevation Ascended (ft)"]),
+    elevation_descended: optStr(row["Elevation Descended (ft)"]),
   }));
 }
 
@@ -182,15 +201,22 @@ function formatDailySummary(date: string, metrics: DailyMetrics, workouts: Worko
       exercise_min: Math.round(metrics.exercise_min),
       stand_hours: Math.round(metrics.stand_hr),
     },
-    heart: {
-      resting_hr: avg(metrics.resting_hr) ? Math.round(avg(metrics.resting_hr)!) : null,
-      hrv_ms: avg(metrics.hrv) ? Math.round(avg(metrics.hrv)!) : null,
-      resp_rate: avg(metrics.resp_rate) ? +(avg(metrics.resp_rate)!.toFixed(1)) : null,
-      spo2_pct: avg(metrics.blood_o2) ? Math.round(avg(metrics.blood_o2)!) : null,
-      hr_min: metrics.hr_min.length ? Math.min(...metrics.hr_min) : null,
-      hr_max: metrics.hr_max.length ? Math.max(...metrics.hr_max) : null,
-      wrist_temp_f: avg(metrics.wrist_temp) ? +(avg(metrics.wrist_temp)!.toFixed(1)) : null,
-    },
+    heart: (() => {
+      const rhr = avg(metrics.resting_hr);
+      const hrv = avg(metrics.hrv);
+      const rr = avg(metrics.resp_rate);
+      const o2 = avg(metrics.blood_o2);
+      const wt = avg(metrics.wrist_temp);
+      return {
+        resting_hr: rhr ? Math.round(rhr) : null,
+        hrv_ms: hrv ? Math.round(hrv) : null,
+        resp_rate: rr ? +rr.toFixed(1) : null,
+        spo2_pct: o2 ? Math.round(o2) : null,
+        hr_min: metrics.hr_min.length ? Math.min(...metrics.hr_min) : null,
+        hr_max: metrics.hr_max.length ? Math.max(...metrics.hr_max) : null,
+        wrist_temp_f: wt ? +wt.toFixed(1) : null,
+      };
+    })(),
     sleep: {
       total: fmtDuration(metrics.sleep_total),
       asleep: fmtDuration(metrics.sleep_asleep),
@@ -204,7 +230,7 @@ function formatDailySummary(date: string, metrics: DailyMetrics, workouts: Worko
   };
 }
 
-const optDate = z.string().optional().describe("YYYY-MM-DD, defaults to today");
+const optDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("YYYY-MM-DD, defaults to today");
 
 server.registerTool("apple_health_daily", {
   title: "Daily Summary",
@@ -244,12 +270,14 @@ server.registerTool("apple_health_trends", {
     const d = dt.toISOString().split("T")[0];
     const metrics = parseMetrics(d);
     if (metrics) {
+      const rhr = avg(metrics.resting_hr);
+      const hrv = avg(metrics.hrv);
       results.push({
         date: d,
         steps: Math.round(metrics.steps),
         active_energy: Math.round(metrics.active_energy),
-        resting_hr: avg(metrics.resting_hr) ? Math.round(avg(metrics.resting_hr)!) : null,
-        hrv: avg(metrics.hrv) ? Math.round(avg(metrics.hrv)!) : null,
+        resting_hr: rhr ? Math.round(rhr) : null,
+        hrv: hrv ? Math.round(hrv) : null,
         sleep_total_hrs: +metrics.sleep_total.toFixed(1),
         weight: avg(metrics.weight),
       });

@@ -2,9 +2,26 @@
   "name": "apple-health-mcp",
   "version": "0.1.0",
   "description": "Apple Health MCP server — reads Health Auto Export CSVs",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "apple-health-mcp": "./dist/mcp.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/daveremy/apple-health-mcp.git"
+  },
+  "keywords": [
+    "mcp",
+    "apple-health",
+    "health",
+    "model-context-protocol"
+  ],
+  "engines": {
+    "node": ">=18"
   },
   "scripts": {
     "build": "tsc && chmod +x dist/mcp.js",
