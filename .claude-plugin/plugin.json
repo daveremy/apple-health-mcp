@@ -1,0 +1,14 @@
+{
+  "name": "apple-health-mcp",
+  "description": "Query Apple Health daily metrics, workouts, and trends via Health Auto Export CSVs",
+  "version": "0.1.0",
+  "author": { "name": "daveremy" },
+  "homepage": "https://github.com/daveremy/apple-health-mcp",
+  "repository": "https://github.com/daveremy/apple-health-mcp",
+  "mcpServers": {
+    "apple-health": {
+      "command": "npx",
+      "args": ["-y", "apple-health-mcp"]
+    }
+  }
+}

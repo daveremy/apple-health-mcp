@@ -5,13 +5,14 @@ import { z } from "zod";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
+import { VERSION } from "./version.js";
 
 const BASE = process.env.APPLE_HEALTH_EXPORT_DIR ??
   join(homedir(), "Library/Mobile Documents/iCloud~com~ifunography~HealthExport/Documents");
 const METRICS_DIR = join(BASE, "Daily Export");
 const WORKOUTS_DIR = join(BASE, "Workouts");
 
-const server = new McpServer({ name: "apple-health", version: "0.1.0" });
+const server = new McpServer({ name: "apple-health", version: VERSION });
 
 function today(): string {
   return new Date().toISOString().split("T")[0];
