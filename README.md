@@ -76,6 +76,20 @@ If your Health Auto Export saves to a different location, set the environment va
 }
 ```
 
+### Units (metric / imperial)
+
+Health Auto Export writes columns in either imperial (`Weight (lbs)`, `Distance (mi)`, `Active Energy (kcal)`, `Wrist Temperature (ºF)`) or metric (`Weight (kg)`, `Distance (km)`, `Active Energy (kJ)`, `Wrist Temperature (degC)`) depending on your iPhone's region. The parser auto-detects either, so it works regardless of which your CSVs use.
+
+By default, output uses imperial field names (`weight`, `distance_mi`, `active_energy_kcal`, `wrist_temp_f`). Set `UNITS=metric` to emit metric field names (`weight_kg`, `distance_km`, `active_energy_kj`, `wrist_temp_c`):
+
+```json
+{
+  "env": {
+    "UNITS": "metric"
+  }
+}
+```
+
 ## Data Format
 
 The server expects the CSV file structure produced by Health Auto Export:
